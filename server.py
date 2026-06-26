@@ -4,7 +4,35 @@ import threading
 IP = "127.0.0.1"
 PUERTO = 8000
 
+CANTIDAD_MENSAJE = 200
 clientes = []
+
+def validar_mensaje(mensaje):
+    if not mensaje:
+        return False
+
+    if mensaje.strip() == "":
+        return False
+
+    if len(mensaje) > CANTIDAD_MENSAJE:
+        return False
+
+    return True
+
+def salir(mensaje):
+    return mensaje.lower().strip() == "/salir" 
+
+def formatear_mensaje(direccion, mensaje):
+    return f"{direccion}: {mensaje}"
+
+
+def agregar_cliente(clientes_conectados, cliente):
+    clientes_conectados.append(cliente)
+
+
+def eliminar_cliente(clientes_conectados, cliente):
+    if cliente in clientes_conectados:
+        clientes_conectados.remove(cliente)
 
 #es para enviar un mensaje a todos los dispositivos conectados menos al emisor
 def broadcast(mensaje, emisor,clientes_conectados):   
@@ -13,16 +41,15 @@ def broadcast(mensaje, emisor,clientes_conectados):
             try:
                 c.send(mensaje.encode("utf-8"))   
             except:                     
-                clientes_conectados.remove(c)     
+                eliminar_cliente(clientes_conectados, c)    
                 c.close()               #se cierra el socket
 
-def salir(mensaje):
-    return mensaje.lower().strip() == "/salir"               
+              
 
 #hilo para manejar a cada cliente
 def manejar_cliente(cliente, direccion):
     print(f"Conexion establecida con {direccion}")
-    clientes.append(cliente)
+    agregar_cliente(clientes, cliente)
     try:                 #bucle para escuchar mensajes del cliente
         while True:
             mensaje = cliente.recv(1024).decode("utf-8")    #llama al metodo recv del objeto socket
@@ -32,16 +59,19 @@ def manejar_cliente(cliente, direccion):
             if salir(mensaje):
                 cliente.send("cerrado".encode("utf-8"))
                 break
+            if not validar_mensaje(mensaje):
+                cliente.send("mensaje invalido".encode("utf-8"))
+                continue
+
+            mensaje_formateado = formatear_mensaje(direccion, mensaje)
+            print(mensaje_formateado)
+            broadcast(mensaje_formateado, cliente, clientes)
  
-            #para ver el mensaje recibido y quien envio
-            print(f"{direccion}: {mensaje}")
-            broadcast(f"{direccion}: {mensaje}", cliente,clientes)    #llama a la funcion para reenviar mensajes a los demas clientes
     except Exception as error:       #aca se guarda el objeto de la excepcion en la var error
         print(f"Error con {direccion}: {error}")
     finally:
-        if cliente in clientes:
-            clientes.remove(cliente)
-        cliente.close()        #cierra formalmente la conexion de red tcp, libera el puerto local que usaba el socket
+        eliminar_cliente(clientes, cliente)
+        cliente.close()
         print(f" {direccion} se desconecto")
 
 #para crear el socket del servidor
