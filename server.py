@@ -7,13 +7,13 @@ PUERTO = 8000
 clientes = []
 
 #es para enviar un mensaje a todos los dispositivos conectados menos al emisor
-def broadcast(mensaje, emisor):   
-    for c in clientes:
+def broadcast(mensaje, emisor,clientes_conectados):   
+    for c in clientes_conectados:
         if c != emisor:
             try:
                 c.send(mensaje.encode("utf-8"))   
             except:                     
-                clientes.remove(c)     
+                clientes_conectados.remove(c)     
                 c.close()               #se cierra el socket
 
 #hilo para manejar a cada cliente
@@ -32,7 +32,7 @@ def manejar_cliente(cliente, direccion):
  
             #para ver el mensaje recibido y quien envio
             print(f"{direccion}: {mensaje}")
-            broadcast(f"{direccion}: {mensaje}", cliente)    #llama a la funcion para reenviar mensajes a los demas clientes
+            broadcast(f"{direccion}: {mensaje}", cliente,clientes)    #llama a la funcion para reenviar mensajes a los demas clientes
     except Exception as error:       #aca se guarda el objeto de la excepcion en la var error
         print(f"Error con {direccion}: {error}")
     finally:
