@@ -16,6 +16,9 @@ def broadcast(mensaje, emisor,clientes_conectados):
                 clientes_conectados.remove(c)     
                 c.close()               #se cierra el socket
 
+def salir(mensaje):
+    return mensaje.lower().strip() == "/salir"               
+
 #hilo para manejar a cada cliente
 def manejar_cliente(cliente, direccion):
     print(f"Conexion establecida con {direccion}")
@@ -26,7 +29,7 @@ def manejar_cliente(cliente, direccion):
             if not mensaje:                                 
                 break
 
-            if mensaje.lower().strip() == "/salir":
+            if salir(mensaje):
                 cliente.send("cerrado".encode("utf-8"))
                 break
  
