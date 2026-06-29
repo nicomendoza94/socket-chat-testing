@@ -1,4 +1,6 @@
-from server import validar_mensaje
+from server import validar_mensaje, salir
+
+# validar_mensaje()
 
  #mensaje vacio no debe ser aceptado
 def test_validate_empty_message():
@@ -23,3 +25,29 @@ def test_validate_message_with_more_than_200_characters():
     mensaje = "a" * 201
 
     assert validar_mensaje(mensaje) is False
+
+# salir()
+
+#el comando "/salir" debe ser reconocido
+def test_exit_command():
+    assert salir("/salir") is True
+
+
+#el comando debe funcionar sin importar mayusculas o minusculas
+def test_exit_command_is_case_insensitive():
+    assert salir("/SALIR") is True
+
+
+#los espacios al inicio o al final no deben afectar la validacion
+def test_exit_command_with_surrounding_spaces():
+    assert salir("   /salir   ") is True
+
+
+#cualquier otro mensaje no debe interpretarse como comando de salida
+def test_non_exit_command():
+    assert salir("Hola") is False
+
+
+#el comando debe ser exactamente "/salir".
+def test_exit_command_with_additional_text():
+    assert salir("/salir ahora") is False
