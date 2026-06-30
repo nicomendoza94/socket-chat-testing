@@ -1,4 +1,4 @@
-from server import validar_mensaje, salir
+from server import validar_mensaje, salir, formatear_mensaje
 
 # validar_mensaje()
 
@@ -51,3 +51,28 @@ def test_non_exit_command():
 #el comando debe ser exactamente "/salir".
 def test_exit_command_with_additional_text():
     assert salir("/salir ahora") is False
+
+# formatear_mensaje()
+
+#el mensaje debe incluir la direccion seguida del contenido
+def test_format_message():
+    assert (
+        formatear_mensaje(("127.0.0.1", 8000), "Hola")
+        == "('127.0.0.1', 8000): Hola"
+    )
+
+
+#un mensaje vacio debe conservar el formato
+def test_format_empty_message():
+    assert (
+        formatear_mensaje(("127.0.0.1", 8000), "")
+        == "('127.0.0.1', 8000): "
+    )
+
+
+#el contenido del mensaje no debe modificarse
+def test_format_message_with_special_characters():
+    assert (
+        formatear_mensaje(("127.0.0.1", 8000), "Hola!!!")
+        == "('127.0.0.1', 8000): Hola!!!"
+    )
