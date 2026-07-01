@@ -1,4 +1,5 @@
-from server import validar_mensaje, salir, formatear_mensaje, agregar_cliente, eliminar_cliente
+from unittest.mock import Mock
+from server import validar_mensaje, salir, formatear_mensaje, agregar_cliente, eliminar_cliente, broadcast
 
 # validar_mensaje()
 
@@ -127,3 +128,44 @@ def test_remove_non_existing_client():
     eliminar_cliente(clientes_conectados, cliente_inexistente)
 
     assert clientes_conectados == [cliente_existente]
+
+# broadcast()
+
+#el mensaje debe enviarse a todos los clientes excepto al emisor
+def test_broadcast_sends_message_to_all_clients_except_sender():
+    emisor = Mock()
+    cliente_1 = Mock()
+    cliente_2 = Mock()
+
+    clientes_conectados = [emisor, cliente_1, cliente_2]
+
+    broadcast("Hola", emisor, clientes_conectados)
+
+    emisor.send.assert_not_called()
+    cliente_1.send.assert_called_once_with("Hola".encode("utf-8"))
+    cliente_2.send.assert_called_once_with("Hola".encode("utf-8"))
+
+
+#si solo existe el emisor conectado, no debe producirse ningun error
+def test_broadcast_does_not_fail_when_only_sender_is_connected():
+    emisor = Mock()
+    clientes_conectados = [emisor]
+
+    broadcast("Hola", emisor, clientes_conectados)
+
+    emisor.send.assert_not_called()
+
+
+#si un cliente genera un error al enviar un mensaje, debe eliminarse de la lista
+def test_broadcast_removes_client_when_send_fails():
+    emisor = Mock()
+    cliente_con_error = Mock()
+
+    cliente_con_error.send.side_effect = Exception("Connection error")
+
+    clientes_conectados = [emisor, cliente_con_error]
+
+    broadcast("Hola", emisor, clientes_conectados)
+
+    assert cliente_con_error not in clientes_conectados
+    cliente_con_error.close.assert_called_once()
