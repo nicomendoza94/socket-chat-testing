@@ -2,26 +2,63 @@ import socket
 import threading
 import time
 
+import pytest
+
 from server import iniciar_servidor
 
-# Integration Tests
 
-#el servidor debe aceptar conexiones de clientes
-def test_server_accepts_client_connection():
+HOST = "127.0.0.1"
+PORT = 8000
+TIMEOUT = 2
 
-    servidor = threading.Thread(
+
+@pytest.fixture(scope="session", autouse=True)
+def start_server_once():
+    #el servidor se inicia una sola vez para evitar conflictos con el puerto 8000
+    server_thread = threading.Thread(
         target=iniciar_servidor,
         daemon=True
     )
 
-    servidor.start()
+    server_thread.start()
 
     #espera breve para permitir que el servidor comience a escuchar
     time.sleep(0.5)
 
-    cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    cliente.connect(("127.0.0.1", 8000))
 
-    assert cliente.fileno() != -1
+def create_client():
+    #cada cliente usa timeout para evitar que recv() bloquee indefinidamente
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.settimeout(TIMEOUT)
+    client_socket.connect((HOST, PORT))
 
-    cliente.close()
+    return client_socket
+
+
+def test_server_accepts_client_connection():
+    #el servidor debe aceptar conexiones de clientes
+    client_socket = create_client()
+
+    assert client_socket.fileno() != -1
+
+    client_socket.close()
+
+
+def test_server_broadcasts_messages_between_clients():
+    #el servidor debe reenviar un mensaje a todos los clientes excepto al emisor
+    sender_client = create_client()
+    receiver_client = create_client()
+
+    #espera breve para asegurar que ambos clientes esten registrados en el servidor
+    time.sleep(0.2)
+
+    message = "Hola"
+
+    sender_client.send(message.encode("utf-8"))
+
+    received_message = receiver_client.recv(1024).decode("utf-8")
+
+    assert message in received_message
+
+    sender_client.close()
+    receiver_client.close()
