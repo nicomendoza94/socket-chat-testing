@@ -36,7 +36,7 @@ def eliminar_cliente(clientes_conectados, cliente):
 
 #es para enviar un mensaje a todos los dispositivos conectados menos al emisor
 def broadcast(mensaje, emisor,clientes_conectados):   
-    for c in clientes_conectados:
+    for c in clientes_conectados[:]:
         if c != emisor:
             try:
                 c.send(mensaje.encode("utf-8"))   
