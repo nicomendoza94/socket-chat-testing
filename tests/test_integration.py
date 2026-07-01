@@ -161,3 +161,25 @@ def test_message_is_not_duplicated():
 
     sender_client.close()
     receiver_client.close()
+
+#varios clientes deben poder enviar mensajes sin afectar la comunicacion
+def test_multiple_clients_can_send_messages():
+    client_1 = create_client()
+    client_2 = create_client()
+
+    time.sleep(0.2)
+
+    message_1 = "Mensaje desde cliente 1"
+    message_2 = "Mensaje desde cliente 2"
+
+    client_1.send(message_1.encode("utf-8"))
+    received_by_client_2 = client_2.recv(1024).decode("utf-8")
+
+    client_2.send(message_2.encode("utf-8"))
+    received_by_client_1 = client_1.recv(1024).decode("utf-8")
+
+    assert message_1 in received_by_client_2
+    assert message_2 in received_by_client_1
+
+    client_1.close()
+    client_2.close()
