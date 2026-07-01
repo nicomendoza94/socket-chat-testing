@@ -1,4 +1,4 @@
-from server import validar_mensaje, salir, formatear_mensaje
+from server import validar_mensaje, salir, formatear_mensaje, agregar_cliente, eliminar_cliente
 
 # validar_mensaje()
 
@@ -76,3 +76,54 @@ def test_format_message_with_special_characters():
         formatear_mensaje(("127.0.0.1", 8000), "Hola!!!")
         == "('127.0.0.1', 8000): Hola!!!"
     )
+
+# agregar_cliente()
+
+#un cliente nuevo debe agregarse correctamente a una lista vacia
+def test_add_client_to_empty_list():
+    clientes_conectados = []
+    cliente = object()
+
+    agregar_cliente(clientes_conectados, cliente)
+
+    assert cliente in clientes_conectados
+    assert len(clientes_conectados) == 1
+
+
+#agregar un cliente no debe eliminar ni reemplazar clientes existentes
+def test_add_client_to_existing_list():
+    cliente_existente = object()
+    cliente_nuevo = object()
+    clientes_conectados = [cliente_existente]
+
+    agregar_cliente(clientes_conectados, cliente_nuevo)
+
+    assert cliente_existente in clientes_conectados
+    assert cliente_nuevo in clientes_conectados
+    assert len(clientes_conectados) == 2
+
+
+# eliminar_cliente()
+
+#un cliente conectado debe poder eliminarse de la lista
+def test_remove_existing_client():
+    cliente_a_eliminar = object()
+    cliente_restante = object()
+    clientes_conectados = [cliente_a_eliminar, cliente_restante]
+
+    eliminar_cliente(clientes_conectados, cliente_a_eliminar)
+
+    assert cliente_a_eliminar not in clientes_conectados
+    assert cliente_restante in clientes_conectados
+    assert len(clientes_conectados) == 1
+
+
+#intentar eliminar un cliente inexistente no debe alterar la lista
+def test_remove_non_existing_client():
+    cliente_existente = object()
+    cliente_inexistente = object()
+    clientes_conectados = [cliente_existente]
+
+    eliminar_cliente(clientes_conectados, cliente_inexistente)
+
+    assert clientes_conectados == [cliente_existente]
